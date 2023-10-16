@@ -61,6 +61,16 @@ class LifecycleModelMixin(object):
         super().__init__(*args, **kwargs)
         self._initial_state = self._snapshot_state()
 
+    def mark_to_be_updated(self, *fields):
+        if not hasattr(self, '_to_be_updated'):
+            self._to_be_updated = set()
+        [self._to_be_updated.add(field) for field in fields]
+
+    def _maybe_resync_update_fields(self, **save_kwargs):
+        if ('update_fields' not in save_kwargs) or (not hasattr(self, '_to_be_updated')):
+            return
+        save_kwargs['update_fields'] = list(set(save_kwargs['update_fields']) | self._to_be_updated)
+
     def _snapshot_state(self):
         state = self.__dict__.copy()
 
@@ -226,7 +236,6 @@ class LifecycleModelMixin(object):
     def _watched_fk_models(cls) -> List[str]:
         return [_.split(".")[0] for _ in cls._watched_fk_model_fields()]
 
-
     def _get_hooked_methods(self, hook: str, **kwargs) -> List[AbstractHookedMethod]:
         """
         Iterate through decorated methods to find those that should be
@@ -292,6 +301,7 @@ class LifecycleModelMixin(object):
             method.run(self)
             fired.append(method.name)
 
+        _maybe_resync_update_fields(**kwargs)
         return fired
 
     def _check_callback_conditions(
