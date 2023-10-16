@@ -301,7 +301,7 @@ class LifecycleModelMixin(object):
             method.run(self)
             fired.append(method.name)
 
-        _maybe_resync_update_fields(**kwargs)
+        self._maybe_resync_update_fields(**kwargs)
         return fired
 
     def _check_callback_conditions(
