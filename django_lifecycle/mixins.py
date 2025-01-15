@@ -135,8 +135,8 @@ class LifecycleModelMixin(object):
 
         if field_name in self._initial_state:
             return self._initial_state[field_name]
-
-        return None
+        
+        raise AttributeError(f'Attribute with {field_name=} not found in {self._initial_state=}')
 
     def has_changed(self, field_name: str) -> bool:
         """
